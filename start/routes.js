@@ -19,17 +19,31 @@ const Route = use('Route')
 Route.on('/').render('welcome')
 
 //Product
-Route.post('api/v1/products', 'ProductController.store')
-Route.get('api/v1/products', 'ProductController.index')
-Route.get('api/v1/product/:id', 'ProductController.show').middleware(['findProduct'])
-Route.patch('api/v1/product/:id', 'ProductController.update').middleware(['findProduct'])
-Route.delete('api/v1/product/:id', 'ProductController.destroy').middleware(['findProduct'])
+Route
+    .group(() => {
+        Route.post('products', 'ProductController.store')
+        Route.get('products', 'ProductController.index')
+        Route.get('products/:id', 'ProductController.show').middleware(['findProduct'])
+        Route.patch('products/:id', 'ProductController.update').middleware(['findProduct'])
+        Route.delete('products/:id', 'ProductController.destroy').middleware(['findProduct'])
+    })
+    .prefix('api/v1')
 
 //Images
-Route.post('api/v1/images', 'ImageController.store')
-Route.get('api/v1/images', 'ImageController.index')
-Route.get('api/v1/image/:id', 'ImageController.show')
+Route
+    .group(() => {
+        Route.post('images', 'ImageController.store')
+        Route.get('images', 'ImageController.index')
+        Route.get('images/:id', 'ImageController.show')
+    })
+    .prefix('api/v1')
 
 
 //Store
-Route.post('api/v1/carts','CartController.store')
+Route
+    .group(() => {
+        Route.post('carts', 'CartController.store')
+        Route.get('carts/:id', 'CartController.show')
+    })
+    .prefix('api/v1')
+

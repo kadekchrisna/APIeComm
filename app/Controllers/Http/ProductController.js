@@ -94,7 +94,7 @@ class ProductController {
      * @param {View} ctx.view
      */
     async show({ params, request, response, view }) {
-        const product = request.post().product
+        const product = await Product.find(params.id)
 
         response.status(200).json({
             status: 1,

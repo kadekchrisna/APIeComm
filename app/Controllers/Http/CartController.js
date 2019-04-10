@@ -1,6 +1,8 @@
 'use strict'
 
 const Cart = use('App/Models/Cart')
+const Checkout = use('App/Models/Checkout')
+const Product = use('App/Models/Product')
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
@@ -50,25 +52,101 @@ class CartController {
      * @param {Response} ctx.response
      */
     async store({ request, response }) {
-        const { total, user_id } = request.post()
 
+        const { status, user_id, product_id, product_qty, total } = request.post()
+
+        // Checking if there is already cart for this user and the cart not yet completed
         const cartCheck = await Cart.query()
             .where('user_id', user_id)
             .where('status', 0)
             .getCount()
 
-        if (cartCheck > 0) {
+        // response.status(200).json({
+        //     message: 'Cart added successfully.',
+        //     data: cartCheck
+        // })
 
-        }else{
-            
+
+        if (cartCheck < 1) {
+            const cart = await Cart.create({ status, user_id })
+            response.status(200).json({
+                message: 'Cart added successfully.',
+                data: cart
+            })
+
+        } else {
+            const cartCheck = await Cart.query()
+                .where('user_id', user_id)
+                .where('status', 0)
+                .fetch()
+            const cartId = cartCheck.rows[0].id
+            const checkoutCheck = await Checkout.query()
+                .where('cart_id', cartId)
+                .getCount()
+
+            if (checkoutCheck < 1) {
+
+                const checkout = new Checkout()
+                checkout.product_id = product_id
+                checkout.product_qty = product_qty
+                checkout.total = total
+                checkout.cart_id = cartId
+
+                await checkout.save()
+
+                response.status(200).json({
+                    message: 'Checkout added successfully.',
+                    data: checkout
+                })
+
+            } else {
+
+                const checkoutCheck = await Checkout.query()
+                    .where('product_id', product_id)
+                    .where('cart_id', cartId)
+                    .getCount()
+
+                if (checkoutCheck > 0) {
+                    const checkoutCheck = await Checkout.query()
+                        .select('id', 'product_qty')
+                        .where('product_id', product_id)
+                        .where('cart_id', cartId)
+                        .fetch()
+
+                    const qtyProduct = checkoutCheck.rows[0].product_qty
+                    const idCheckout = checkoutCheck.rows[0].id
+
+                    const checkout = await Checkout.find(idCheckout)
+                    checkout.product_id = product_id
+                    checkout.product_qty = qtyProduct + 1
+                    checkout.total = total
+                    checkout.cart_id = cartId
+
+                    await checkout.save()
+
+                    response.status(200).json({
+                        message: 'Cart added successfully.',
+                        data: checkout
+                    })
+
+                } else {
+                    const checkout = new Checkout()
+                    checkout.product_id = product_id
+                    checkout.product_qty = product_qty
+                    checkout.total = total
+                    checkout.cart_id = cartId
+
+                    await checkout.save()
+
+                    response.status(200).json({
+                        message: 'Checkout added successfully.',
+                        data: checkout
+                    })
+
+                }
+
+            }
         }
-
-        // const cart = await Cart.create({ total, user_id })
-        response.status(200).json({
-            message: 'Cart added successfully.',
-            data: cartCheck
-        })
-
     }
 
     /**
@@ -81,6 +159,23 @@ class CartController {
      * @param {View} ctx.view
      */
     async show({ params, request, response, view }) {
+        const cart = await Cart.query()
+        .select('id')
+        .where('user_id', params.id)
+        .where('status', 0)
+        .with('checkouts')
+        .fetch()
+        const idCart = cart.rows[0].id
+
+        const product = await Product.query()
+            .leftJoin('checkouts','products.id','checkouts.product_id')
+            .where('checkouts.cart_id', idCart)
+            .fetch()
+
+        response.status(200).json({
+            status: 1,
+            data: product
+        })
     }
 
     /**
@@ -104,6 +199,7 @@ class CartController {
      * @param {Response} ctx.response
      */
     async update({ params, request, response }) {
+
     }
 
     /**
