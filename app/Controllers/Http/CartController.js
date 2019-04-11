@@ -89,14 +89,19 @@ class CartController {
                 const checkout = new Checkout()
                 checkout.product_id = product_id
                 checkout.product_qty = product_qty
-                checkout.total = total
+                checkout.total = total * product_qty
                 checkout.cart_id = cartId
 
                 await checkout.save()
 
+                const checkoutPrice = await Checkout.query()
+                    .where('cart_id', cartId)
+                    .sum('total as total')
+
                 response.status(200).json({
                     message: 'Checkout added successfully.',
-                    data: checkout
+                    data: checkout,
+                    total: checkoutPrice[0].total
                 })
 
             } else {
@@ -108,39 +113,52 @@ class CartController {
 
                 if (checkoutCheck > 0) {
                     const checkoutCheck = await Checkout.query()
-                        .select('id', 'product_qty')
+                        .select('id', 'product_qty', 'total')
                         .where('product_id', product_id)
                         .where('cart_id', cartId)
                         .fetch()
 
                     const qtyProduct = checkoutCheck.rows[0].product_qty
                     const idCheckout = checkoutCheck.rows[0].id
+                    const price = (checkoutCheck.rows[0].total) / qtyProduct
 
                     const checkout = await Checkout.find(idCheckout)
                     checkout.product_id = product_id
                     checkout.product_qty = qtyProduct + 1
-                    checkout.total = total
+                    checkout.total = price * (qtyProduct + 1)
                     checkout.cart_id = cartId
 
                     await checkout.save()
+
+                    const checkoutPrice = await Checkout.query()
+                        .where('cart_id', cartId)
+                        .sum('total as total')
 
                     response.status(200).json({
                         message: 'Cart added successfully.',
-                        data: checkout
+                        data: checkout,
+                        total: checkoutPrice[0].total
                     })
 
                 } else {
+
                     const checkout = new Checkout()
+
                     checkout.product_id = product_id
                     checkout.product_qty = product_qty
-                    checkout.total = total
                     checkout.cart_id = cartId
+                    checkout.total = total * product_qty
 
                     await checkout.save()
 
+                    const checkoutPrice = await Checkout.query()
+                        .where('cart_id', cartId)
+                        .sum('total as total')
+
                     response.status(200).json({
                         message: 'Checkout added successfully.',
-                        data: checkout
+                        data: checkout,
+                        total: checkoutPrice[0].total
                     })
 
                 }
@@ -160,21 +178,26 @@ class CartController {
      */
     async show({ params, request, response, view }) {
         const cart = await Cart.query()
-        .select('id')
-        .where('user_id', params.id)
-        .where('status', 0)
-        .with('checkouts')
-        .fetch()
+            .select('id')
+            .where('user_id', params.id)
+            .where('status', 0)
+            .with('checkouts')
+            .fetch()
         const idCart = cart.rows[0].id
 
         const product = await Product.query()
-            .leftJoin('checkouts','products.id','checkouts.product_id')
+            .leftJoin('checkouts', 'products.id', 'checkouts.product_id')
             .where('checkouts.cart_id', idCart)
             .fetch()
 
+        const checkoutPrice = await Checkout.query()
+            .where('cart_id', idCart)
+            .sum('total as total')
+
         response.status(200).json({
             status: 1,
-            data: product
+            data: product,
+            total: checkoutPrice[0].total
         })
     }
 
@@ -200,6 +223,66 @@ class CartController {
      */
     async update({ params, request, response }) {
 
+        const { qty } = request.post()
+
+        const idCheckout = parseInt(params.id)
+        // const idProduct = parseInt(params.product)
+        if (qty > 0) {
+            const checkout = await Checkout.find(idCheckout)
+            const total = (checkout.total / checkout.product_qty) * qty
+            const idCart = checkout.cart_id
+            checkout.product_qty = qty
+            checkout.total = total
+
+            await checkout.save()
+
+            const product = await Product.query()
+                .leftJoin('checkouts', 'products.id', 'checkouts.product_id')
+                .where('checkouts.cart_id', idCart)
+                .fetch()
+            const checkoutPrice = await Checkout.query()
+                .where('cart_id', idCart)
+                .sum('total as total')
+
+            response.status(200).json({
+                message: 'Checkout updated successfully.',
+                data: product,
+                total: checkoutPrice[0].total
+            })
+
+        } else {
+            const checkout = await Checkout.find(idCheckout)
+            const total = (checkout.total / checkout.product_qty)
+            const idCart = checkout.cart_id
+            checkout.product_qty = 1
+            checkout.total = total
+
+            await checkout.save()
+
+            const product = await Product.query()
+                .leftJoin('checkouts', 'products.id', 'checkouts.product_id')
+                .where('checkouts.cart_id', idCart)
+                .fetch()
+            const checkoutPrice = await Checkout.query()
+                .where('cart_id', idCart)
+                .sum('total as total')
+
+
+            response.status(200).json({
+                message: 'Checkout updated successfully.',
+                data: product,
+                total: checkoutPrice[0].total
+            })
+
+
+        }
+
+        // const checkout = await Checkout.query()
+        // .select('id')
+        // .where('user_id', params.id)
+        // .where('status', 0)
+        // .with('checkouts')
+        // .fetch()
     }
 
     /**
@@ -211,6 +294,24 @@ class CartController {
      * @param {Response} ctx.response
      */
     async destroy({ params, request, response }) {
+        const checkout = await Checkout.find(params.id)
+        const idCart = checkout.cart_id
+        await checkout.delete()
+
+        const product = await Product.query()
+            .leftJoin('checkouts', 'products.id', 'checkouts.product_id')
+            .where('checkouts.cart_id', idCart)
+            .fetch()
+        const checkoutPrice = await Checkout.query()
+            .where('cart_id', idCart)
+            .sum('total as total')
+
+        response.status(200).json({
+            message: 'Checkout deleted successfully.',
+            data: product,
+            total: checkoutPrice[0].total
+        })
+
     }
 }
 

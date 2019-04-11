@@ -39,11 +39,13 @@ Route
     .prefix('api/v1')
 
 
-//Store
+//Cart
 Route
     .group(() => {
         Route.post('carts', 'CartController.store')
         Route.get('carts/:id', 'CartController.show')
+        Route.patch('carts/:id', 'CartController.update')
+        Route.delete('carts/:id', 'CartController.destroy')
     })
     .prefix('api/v1')
 
