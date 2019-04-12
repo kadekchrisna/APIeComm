@@ -231,7 +231,8 @@ class CartController {
         const idCheckout = parseInt(params.id)
         
         // const idProduct = parseInt(params.product)
-        if (qty >= 0) {
+
+        if (qty > 0) {
             const checkout = await Checkout.find(idCheckout)
             const total = checkout.price  * qty
             const idCart = checkout.cart_id
@@ -254,7 +255,7 @@ class CartController {
                 total: checkoutPrice[0].total
             })
 
-        } else if(qty = 0) {
+        } else if(qty < 0) {
             const checkout = await Checkout.find(idCheckout)
             const idCart = checkout.cart_id
             checkout.product_qty = 1
