@@ -89,6 +89,7 @@ class CartController {
                 const checkout = new Checkout()
                 checkout.product_id = product_id
                 checkout.product_qty = product_qty
+                checkout.price = total
                 checkout.total = total * product_qty
                 checkout.cart_id = cartId
 
@@ -124,6 +125,7 @@ class CartController {
 
                     const checkout = await Checkout.find(idCheckout)
                     checkout.product_id = product_id
+                    checkout.price = price
                     checkout.product_qty = qtyProduct + 1
                     checkout.total = price * (qtyProduct + 1)
                     checkout.cart_id = cartId
@@ -147,6 +149,7 @@ class CartController {
                     checkout.product_id = product_id
                     checkout.product_qty = product_qty
                     checkout.cart_id = cartId
+                    checkout.price = total
                     checkout.total = total * product_qty
 
                     await checkout.save()
@@ -226,10 +229,11 @@ class CartController {
         const { qty } = request.post()
 
         const idCheckout = parseInt(params.id)
+        
         // const idProduct = parseInt(params.product)
-        if (qty > 0) {
+        if (qty >= 0) {
             const checkout = await Checkout.find(idCheckout)
-            const total = (checkout.total / checkout.product_qty) * qty
+            const total = checkout.price  * qty
             const idCart = checkout.cart_id
             checkout.product_qty = qty
             checkout.total = total
@@ -250,12 +254,11 @@ class CartController {
                 total: checkoutPrice[0].total
             })
 
-        } else {
+        } else if(qty = 0) {
             const checkout = await Checkout.find(idCheckout)
-            const total = (checkout.total / checkout.product_qty)
             const idCart = checkout.cart_id
             checkout.product_qty = 1
-            checkout.total = total
+            checkout.total = checkout.price
 
             await checkout.save()
 
