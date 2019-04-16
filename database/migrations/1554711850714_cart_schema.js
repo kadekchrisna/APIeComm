@@ -8,6 +8,11 @@ class CartSchema extends Schema {
         this.create('carts', (table) => {
             table.increments()
             table.timestamps()
+            table.integer('total')
+            table.integer('product_id').unsigned()
+            table.foreign('product_id').references('products.id').onDelete('cascade')
+            table.integer('product_qty')
+            table.integer('price')
             table.integer('user_id').unsigned()
             table.foreign('user_id').references('id').inTable('users').onDelete('cascade')
 

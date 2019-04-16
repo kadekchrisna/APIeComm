@@ -21,7 +21,7 @@ class ProductController {
      * @param {Response} ctx.response
      * @param {View} ctx.view
      */
-    async index({ request, response, view }) {
+    async index({ request, response, view, auth }) {
         const product = await Product.all()
         response.status(200).json({
             message: 1,

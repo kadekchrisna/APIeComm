@@ -4,9 +4,6 @@
 const Model = use('Model')
 
 class Cart extends Model {
-    checkouts() {
-        return this.hasMany('App/Models/Checkout')
-    }
     static get primaryKey () {
         return 'id'
       }

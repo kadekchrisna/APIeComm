@@ -49,3 +49,10 @@ Route
     })
     .prefix('api/v1')
 
+//Auth
+Route
+    .group(() => {
+        Route.post('auth/register', 'AuthController.register')
+        Route.post('auth/login', 'AuthController.login')
+    })
+    .prefix('api/v1')
