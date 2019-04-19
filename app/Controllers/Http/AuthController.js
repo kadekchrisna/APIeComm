@@ -36,6 +36,9 @@ class AuthController {
         return response.json({ "user": user, "access_token": accessToken })
     }
 
+    async getProfile({ response, auth }) {
+        return response.send({ status: 1, "user": auth.current.user });
+    }   
 
 }
 

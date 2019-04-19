@@ -62,13 +62,14 @@ class ProductController {
                 .json({ status: 0, message: validation.messages() });
         } else {
 
-            const { name, description, price, quantity } = request.post()
+            const { name, description, price, quantity, uri } = request.post()
 
             const product = new Product()
 
             product.name = name
             product.description = description
             product.price = price
+            product.uri = uri
             product.quantity = quantity
 
             await product.save()

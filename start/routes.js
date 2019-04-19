@@ -42,8 +42,8 @@ Route
 //Cart
 Route
     .group(() => {
-        Route.post('carts', 'CartController.store')
-        Route.get('carts/:id', 'CartController.show')
+        Route.post('carts', 'CartController.store').middleware(['auth'])
+        Route.get('carts/:id', 'CartController.show').middleware(['auth'])
         Route.patch('carts/:id', 'CartController.update')
         Route.delete('carts/:id', 'CartController.destroy')
     })
@@ -54,5 +54,6 @@ Route
     .group(() => {
         Route.post('auth/register', 'AuthController.register')
         Route.post('auth/login', 'AuthController.login')
+        Route.get('user/data', 'AuthController.getProfile').middleware(['auth'])
     })
     .prefix('api/v1')

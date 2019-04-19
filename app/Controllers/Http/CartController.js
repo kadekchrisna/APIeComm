@@ -190,6 +190,11 @@ class CartController {
         // const idProduct = parseInt(params.product)
 
         const cart = await Cart.find(idCart)
+        if (cart == null) {
+            return response.status(404).json({
+                message: 'Data not found.',
+            })
+        }
         const total = cart.price * qty
         const idUser = cart.user_id
         const idProduct = cart.product_id
