@@ -13,6 +13,8 @@ class ProductSchema extends Schema {
             table.string('uri',190)
             table.integer('quantity').defaultTo(1)
             table.integer('price')
+            table.integer('category_id').unsigned()
+
 
         })
     }

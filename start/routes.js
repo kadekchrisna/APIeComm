@@ -23,9 +23,9 @@ Route
     .group(() => {
         Route.post('products', 'ProductController.store')
         Route.get('products', 'ProductController.index')
-        Route.get('products/:id', 'ProductController.show').middleware(['findProduct'])
-        Route.patch('products/:id', 'ProductController.update').middleware(['findProduct'])
-        Route.delete('products/:id', 'ProductController.destroy').middleware(['findProduct'])
+        Route.get('products/:id', 'ProductController.show')
+        Route.patch('products/:id', 'ProductController.update')
+        Route.delete('products/:id', 'ProductController.destroy')
     })
     .prefix('api/v1')
 
@@ -55,5 +55,22 @@ Route
         Route.post('auth/register', 'AuthController.register')
         Route.post('auth/login', 'AuthController.login')
         Route.get('user/data', 'AuthController.getProfile').middleware(['auth'])
+    })
+    .prefix('api/v1')
+
+//Category
+Route
+    .group(() => {
+        Route.post('category', 'CategoryController.store')
+        Route.get('category', 'CategoryController.index')
+        Route.get('category/:id', 'CategoryController.show')
+    })
+    .prefix('api/v1')
+
+//Checkout
+Route
+    .group(() => {
+        Route.post('checkout', 'CheckoutController.store')
+        Route.get('checkout/:id', 'CheckoutController.show')
     })
     .prefix('api/v1')

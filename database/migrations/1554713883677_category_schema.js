@@ -4,20 +4,22 @@
 const Schema = use('Schema')
 
 class CategorySchema extends Schema {
-  up () {
-    this.create('categories', (table) => {
-      table.increments()
-      table.timestamps()
-      table.string('name', 190)
-      table.integer('product_id').unsigned()
-      table.foreign('product_id').references('id').inTable('products').onDelete('cascade')
-      table.string('uri')
-    })
-  }
+    up() {
+        this.create('categories', (table) => {
+            table.increments()
+            table.timestamps()
+            table.string('name', 190)
+            table.string('uri')
+        })
 
-  down () {
-    this.drop('categories')
-  }
+        this.alter('products', (table) => {
+            table.foreign('category_id').references('id').inTable('categories').onDelete('cascade')            
+        })
+    }
+
+    down() {
+        this.drop('categories')
+    }
 }
 
 module.exports = CategorySchema

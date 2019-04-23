@@ -4,83 +4,56 @@ const Product = use('App/Models/Product')
 
 const { validate } = use("Validator");
 
-/** @typedef {import('@adonisjs/framework/src/Request')} Request */
-/** @typedef {import('@adonisjs/framework/src/Response')} Response */
-/** @typedef {import('@adonisjs/framework/src/View')} View */
-
-/**
- * Resourceful controller for interacting with products
- */
 class ProductController {
-    /**
-     * Show a list of all products.
-     * GET products
-     *
-     * @param {object} ctx
-     * @param {Request} ctx.request
-     * @param {Response} ctx.response
-     * @param {View} ctx.view
-     */
     async index({ request, response, view, auth }) {
-        const product = await Product.all()
-        response.status(200).json({
-            message: 1,
-            data: product
-        })
-    }
-
-    /**
-     * Render a form to be used for creating a new product.
-     * GET products/create
-     *
-     * @param {object} ctx
-     * @param {Request} ctx.request
-     * @param {Response} ctx.response
-     * @param {View} ctx.view
-     */
-    async create({ request, response, view }) {
-    }
-
-    /**
-     * Create/save a new product.
-     * POST products
-     *
-     * @param {object} ctx
-     * @param {Request} ctx.request
-     * @param {Response} ctx.response
-     */
-    async store({ request, response }) {
-        const rules = {
-            name: 'required|string',
-            price: 'required|number',
-            description: 'required'
-        }
-        const validation = await validate(request.all(), rules);
-        if (validation.fails()) {
-            return response
-                .status(400)
-                .json({ status: 0, message: validation.messages() });
-        } else {
-
-            const { name, description, price, quantity, uri } = request.post()
-
-            const product = new Product()
-
-            product.name = name
-            product.description = description
-            product.price = price
-            product.uri = uri
-            product.quantity = quantity
-
-            await product.save()
-
-            // const product = await Product.create({ name, description, price, quantity })
-
-            response.status(200).json({
-                status: 1,
+        try {
+            const product = await Product.all()
+            return response.status(200).json({
+                message: 'Show all products success.',
                 data: product
             })
 
+        } catch (error) {
+            console.log(error);
+            return response.status(404).json({
+                message: 'Something went wrong!',
+            })
+
+        }
+    }
+
+    async create({ request, response, view }) {
+    }
+
+    async store({ request, response }) {
+
+        try {
+            const rules = {
+                name: 'required|string',
+                uri: 'required|string',
+                price: 'required|number',
+                description: 'required',
+                quantity: 'required|number',
+            }
+            const validation = await validate(request.all(), rules);
+            if (validation.fails())
+                return response.status(400).json({
+                    message: validation.messages()
+                });
+
+            const productData = request.only(['name', 'description', 'price', 'uri', 'quantity'])
+
+            const product = await Product.create(productData)
+
+            return response.status(201).json({
+                message: 'New product added.',
+                data: product
+            })
+
+        } catch (error) {
+            return response.status(400).json({
+                message: 'Something went wrong!',
+            })
         }
 
     }
@@ -95,12 +68,21 @@ class ProductController {
      * @param {View} ctx.view
      */
     async show({ params, request, response, view }) {
-        const product = await Product.find(params.id)
+        try {
+            const product = await Product.find(params.id)
 
-        response.status(200).json({
-            status: 1,
-            data: product
-        })
+            if (product == null) return response.status(404).json({ 'message': 'No record found!' })
+
+            return response.status(200).json({
+                message: 'Get specific product success.',
+                data: product
+            })
+        } catch (error) {
+            return response.status(400).json({
+                message: 'Something went wrong!',
+            })
+
+        }
 
     }
 
@@ -125,29 +107,38 @@ class ProductController {
      * @param {Response} ctx.response
      */
     async update({ params, request, response }) {
-        const rules = {
-            name: 'string',
-            price: 'number',
-        }
-        const validation = await validate(request.all(), rules);
-        if (validation.fails()) {
-            return response
-                .status(400)
-                .json({ status: 0, message: validation.messages() });
-        }else{
+        try {
 
-            const { name, description, price, quantity, product } = request.post()
-    
-            product.name = name
-            product.description = description
-            product.price = price
-            product.quantity = quantity
-    
-            await product.save()
-    
-            response.status(200).json({
-                status: 1,
-                data: product
+            const rules = {
+                name: 'string',
+                price: 'number',
+                description: 'string',
+                quantity: 'number'
+            }
+            const validation = await validate(request.all(), rules);
+            if (validation.fails()) {
+                return response.status(400).json({
+                    message: validation.messages()
+                });
+            } else {
+
+                const data = request.all()
+
+                const product = await Product.find(params.id)
+
+                product.merge(data)
+
+                await product.save()
+
+                return response.status(200).json({
+                    data: product
+                })
+
+            }
+        } catch (error) {
+            console.log(error);
+            return response.status(400).json({
+                message: 'Something went wrong!',
             })
 
         }
@@ -162,8 +153,22 @@ class ProductController {
      * @param {Response} ctx.response
      */
     async destroy({ params, request, response }) {
-        const product = request.post().product
-        await product.delete()
+        try {
+            const product = Product.find(params.id)
+            if (product == null) {
+                return response.status(404).json({
+                    message: 'Product not found.'
+                })
+            }
+            await product.delete()
+
+        } catch (error) {
+            console.log(error);
+            return response.status(400).json({
+                message: 'Something went wrong!',
+            })
+
+        }
 
 
     }
